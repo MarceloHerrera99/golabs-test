@@ -220,6 +220,7 @@ export function RagDashboard() {
   const [hasAuthTimedOut, setHasAuthTimedOut] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const messages = useQuery(
     convexApi.conversations.listMessages,
     selectedConversationId
@@ -391,6 +392,28 @@ export function RagDashboard() {
     }
   }
 
+  async function handleCreateConversation() {
+    if (isCreatingConversation) {
+      return;
+    }
+
+    setIsCreatingConversation(true);
+    setPrompt("");
+
+    try {
+      const conversationId = await createConversation({});
+      setSelectedConversationId(conversationId);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No pude crear la conversacion.",
+      );
+    } finally {
+      setIsCreatingConversation(false);
+    }
+  }
+
   return (
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
@@ -414,7 +437,10 @@ export function RagDashboard() {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => setSelectedConversationId(null)}
+                    disabled={isCreatingConversation}
+                    onClick={() => {
+                      void handleCreateConversation();
+                    }}
                     tooltip="Nueva conversación"
                   >
                     <PlusIcon />
