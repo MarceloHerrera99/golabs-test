@@ -1,0 +1,7 @@
+interface:
+  display_name: "Agente PRD"
+  short_description: "Create, refine, and review PRDs bilingually."
+  default_prompt: "Use $agente-prd to turn this product idea into a structured PRD, marking assumptions and open questions clearly."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useMemo } from "react";
 import { createAvatar, type Style } from "@dicebear/core";
 import * as collection from "@dicebear/collection";
@@ -66,10 +68,9 @@ export const DicebearAvatar = ({
       return imageURL;
     }
 
-    const avatarStyle = (
-      AVATAR_STYLES[style as AvatarStyleKey] ?? AVATAR_STYLES.micah
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ) as Style<any>;
+    const avatarStyle = (AVATAR_STYLES[style as AvatarStyleKey] ??
+      AVATAR_STYLES.micah) as // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Style<any>;
 
     const avatar = createAvatar(avatarStyle, {
       seed: seed.toLowerCase().trim(),
