@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useMemo } from "react";
 import { createAvatar, type Style } from "@dicebear/core";
 import * as collection from "@dicebear/collection";
