@@ -310,11 +310,6 @@ export function RagDashboard() {
       return;
     }
 
-    if (!hasIndexedDocuments) {
-      toast.info("Sube e indexa un documento antes de usar el chat.");
-      return;
-    }
-
     setIsSending(true);
     setPrompt("");
 
@@ -490,7 +485,7 @@ export function RagDashboard() {
               hasIndexedDocuments={hasIndexedDocuments}
               isDocumentStateLoading={isDocumentStateLoading}
               isSending={isSending}
-              messages={messages}
+              messages={selectedConversationId ? messages : []}
               onSubmit={handleSend}
               prompt={prompt}
               setPrompt={setPrompt}
@@ -555,7 +550,7 @@ function ChatPanel({
   userImage?: string;
   userName?: string | null;
 }) {
-  const canSendMessage = hasIndexedDocuments && !isSending;
+  const canSendMessage = !isSending;
 
   return (
     <Card className="flex min-h-[calc(100svh-8rem)] flex-col overflow-hidden border bg-card/82 shadow-lg">
@@ -571,7 +566,7 @@ function ChatPanel({
                 ? "Preparando el estado de documentos del workspace."
                 : hasIndexedDocuments
                   ? "Haz preguntas en lenguaje natural. El agente buscará en los documentos indexados y responderá con fuentes."
-                  : "Sube e indexa un archivo antes de activar respuestas con fuentes documentales."}
+                    : "Puedes iniciar una conversacion ahora. Cuando existan documentos indexados, el agente respondera con fuentes."}
             </CardDescription>
           </div>
           <Badge variant={hasIndexedDocuments ? "secondary" : "outline"}>
@@ -588,19 +583,6 @@ function ChatPanel({
           <div className="flex min-h-[36rem] flex-col gap-3">
             {isDocumentStateLoading ? (
               <MessageSkeleton />
-            ) : !hasIndexedDocuments ? (
-              <Empty className="min-h-[30rem] border">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <FolderUpIcon />
-                  </EmptyMedia>
-                  <EmptyTitle>No hay documentos indexados</EmptyTitle>
-                  <EmptyDescription>
-                    Cuando subas un archivo y termine de indexarse, el agente
-                    podrá responder usando RAG y fuentes.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
             ) : !messages ? (
               <MessageSkeleton />
             ) : messages.length === 0 ? (
@@ -653,7 +635,7 @@ function ChatPanel({
                 ? "Pregunta algo sobre los documentos subidos..."
                 : isDocumentStateLoading
                   ? "Cargando documentos..."
-                  : "Sube e indexa un documento para activar el chat."
+                    : "Escribe tu mensaje..."
             }
             value={prompt}
           />
@@ -664,7 +646,7 @@ function ChatPanel({
                 ? "Validando documentos del workspace"
                 : hasIndexedDocuments
                   ? "Responde con RAG y fuentes"
-                  : "RAG inactivo hasta indexar documentos"}
+                  : "Chat activo sin fuentes RAG"}
             </div>
             <AIInputSubmit
               disabled={!prompt.trim() || !canSendMessage}

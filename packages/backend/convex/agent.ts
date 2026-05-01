@@ -163,36 +163,10 @@ export const sendMessage = action({
       now,
     });
 
-    if (turn.vectorStoreIds.length === 0) {
-      const content =
-        "Todavía no hay documentos indexados para responder con RAG. Un Admin o Editor debe subir archivos y esperar a que terminen de indexarse.";
-      const assistantMessageId = await ctx.runMutation(
-        internalApi.conversations.completeAssistantTurn,
-        {
-          tokenIdentifier: identity.tokenIdentifier,
-          conversationId: turn.conversationId,
-          content,
-          status: "error",
-          citations: [],
-          model,
-          ragUsed: false,
-          error: "No hay documentos indexados.",
-          now: Date.now(),
-        },
-      );
-
-      return {
-        conversationId: turn.conversationId,
-        assistantMessageId,
-        content,
-        status: "error" as const,
-        citations: [] as Citation[],
-        model,
-      };
-    }
+    const hasRagSources = turn.vectorStoreIds.length > 0;
 
     try {
-      const response = await createResponse({
+      const responseBody: Record<string, unknown> = {
         model,
         instructions:
           "Eres un agente RAG para usuarios autenticados. Responde en español claro y profesional. Usa los archivos disponibles como fuente principal. Si la respuesta depende de documentos, cita las fuentes. Si no encuentras soporte suficiente en los documentos, dilo explícitamente y no inventes.",
@@ -206,18 +180,28 @@ export const sendMessage = action({
             content: args.prompt,
           },
         ],
-        tools: [
+        reasoning: {
+          effort: getEnv("OPENAI_REASONING_EFFORT") || "low",
+        },
+      };
+
+      if (!hasRagSources) {
+        responseBody.instructions =
+          "Eres un agente para usuarios autenticados. Responde en espanol claro y profesional. No afirmes haber consultado documentos porque no hay fuentes RAG indexadas disponibles para esta conversacion.";
+      }
+
+      if (hasRagSources) {
+        responseBody.tools = [
           {
             type: "file_search",
             vector_store_ids: turn.vectorStoreIds,
             max_num_results: 6,
           },
-        ],
-        include: ["file_search_call.results"],
-        reasoning: {
-          effort: getEnv("OPENAI_REASONING_EFFORT") || "low",
-        },
-      });
+        ];
+        responseBody.include = ["file_search_call.results"];
+      }
+
+      const response = await createResponse(responseBody);
 
       const content = extractText(response);
       const citations = extractCitations(response);
@@ -231,7 +215,7 @@ export const sendMessage = action({
           status: "done",
           citations,
           model,
-          ragUsed: true,
+          ragUsed: hasRagSources,
           tokenUsage,
           now: Date.now(),
         },
@@ -249,8 +233,8 @@ export const sendMessage = action({
     } catch (error) {
       const content =
         error instanceof Error
-          ? `No pude completar la respuesta RAG: ${error.message}`
-          : "No pude completar la respuesta RAG por un error desconocido.";
+          ? `No pude completar la respuesta: ${error.message}`
+          : "No pude completar la respuesta por un error desconocido.";
       const assistantMessageId = await ctx.runMutation(
         internalApi.conversations.completeAssistantTurn,
         {
@@ -260,7 +244,7 @@ export const sendMessage = action({
           status: "error",
           citations: [],
           model,
-          ragUsed: true,
+          ragUsed: hasRagSources,
           error: content,
           now: Date.now(),
         },
