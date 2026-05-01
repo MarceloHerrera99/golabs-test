@@ -12,6 +12,21 @@ import {
   documentVisibilityValidator,
 } from "./validators";
 
+type CurrentDocumentStatus =
+  | "uploaded"
+  | "indexing"
+  | "indexed"
+  | "failed"
+  | "archived";
+
+const currentDocumentStatuses = new Set<string>([
+  "uploaded",
+  "indexing",
+  "indexed",
+  "failed",
+  "archived",
+]);
+
 const documentWithUploaderValidator = v.object({
   _id: v.id("documents"),
   _creationTime: v.number(),
@@ -56,15 +71,41 @@ export const list = query({
           .take(100);
 
     const visibleDocuments = documents
-      .filter((document) => document.status !== "archived")
+      .filter(
+        (document) =>
+          document.status !== "archived" &&
+          currentDocumentStatuses.has(document.status) &&
+          document.uploadedBy &&
+          document.title &&
+          document.fileName &&
+          document.visibility,
+      )
       .sort((a, b) => b.createdAt - a.createdAt);
 
     return await Promise.all(
       visibleDocuments.map(async (document) => {
-        const uploader = await ctx.db.get(document.uploadedBy);
+        const uploader = document.uploadedBy
+          ? await ctx.db.get(document.uploadedBy)
+          : null;
 
         return {
-          ...document,
+          _id: document._id,
+          _creationTime: document._creationTime,
+          title: document.title ?? document.fileName ?? "Documento",
+          fileName: document.fileName ?? document.title ?? "documento",
+          contentType: document.contentType,
+          size: document.size,
+          storageId: document.storageId,
+          uploadedBy: document.uploadedBy!,
+          status: document.status as CurrentDocumentStatus,
+          visibility: document.visibility ?? "workspace",
+          openaiFileId: document.openaiFileId,
+          vectorStoreId: document.vectorStoreId,
+          error: document.error,
+          createdAt: document.createdAt,
+          updatedAt: document.updatedAt,
+          indexedAt: document.indexedAt,
+          archivedAt: document.archivedAt,
           uploaderName: uploader?.name ?? null,
           uploaderEmail: uploader?.email ?? null,
         };
@@ -207,6 +248,10 @@ export const getForIndexing = internalQuery({
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.documentId);
     if (!document || document.status === "archived") {
+      return null;
+    }
+
+    if (!document.title || !document.fileName) {
       return null;
     }
 

@@ -54,11 +54,22 @@ export const list = query({
   handler: async (ctx) => {
     const user = await requireUser(ctx);
 
-    return await ctx.db
+    const conversations = await ctx.db
       .query("conversations")
       .filter((q) => q.eq(q.field("userId"), user._id))
       .order("desc")
       .take(30);
+
+    return conversations.map((conversation) => ({
+      _id: conversation._id,
+      _creationTime: conversation._creationTime,
+      userId: user._id,
+      title: conversation.title,
+      status: conversation.status ?? "active",
+      createdAt: conversation.createdAt,
+      updatedAt: conversation.updatedAt,
+      lastMessageAt: conversation.lastMessageAt ?? conversation.updatedAt,
+    }));
   },
 });
 
@@ -96,10 +107,26 @@ export const listMessages = query({
       throw new Error("Conversación no encontrada.");
     }
 
-    return await ctx.db
+    const messages = await ctx.db
       .query("messages")
       .filter((q) => q.eq(q.field("conversationId"), args.conversationId))
       .take(100);
+
+    return messages.map((message) => ({
+      _id: message._id,
+      _creationTime: message._creationTime,
+      conversationId: message.conversationId,
+      userId: user._id,
+      role: message.role,
+      content: message.content,
+      status: message.status ?? "done",
+      citations: message.citations ?? [],
+      model: message.model,
+      ragUsed: message.ragUsed ?? false,
+      tokenUsage: message.tokenUsage,
+      error: message.error,
+      createdAt: message.createdAt,
+    }));
   },
 });
 

@@ -28,14 +28,18 @@ export default defineSchema({
     .index("by_role", ["role"]),
 
   documents: defineTable({
-    title: v.string(),
-    fileName: v.string(),
+    title: v.optional(v.string()),
+    fileName: v.optional(v.string()),
     contentType: v.optional(v.string()),
     size: v.number(),
     storageId: v.id("_storage"),
-    uploadedBy: v.id("users"),
-    status: documentStatusValidator,
-    visibility: documentVisibilityValidator,
+    uploadedBy: v.optional(v.id("users")),
+    status: v.union(
+      documentStatusValidator,
+      v.literal("processing"),
+      v.literal("ready"),
+    ),
+    visibility: v.optional(documentVisibilityValidator),
     openaiFileId: v.optional(v.string()),
     vectorStoreId: v.optional(v.string()),
     error: v.optional(v.string()),
@@ -43,6 +47,14 @@ export default defineSchema({
     updatedAt: v.number(),
     indexedAt: v.optional(v.number()),
     archivedAt: v.optional(v.number()),
+    userId: v.optional(v.string()),
+    name: v.optional(v.string()),
+    type: v.optional(v.union(v.literal("csv"), v.literal("pdf"))),
+    mimeType: v.optional(v.string()),
+    columnNames: v.optional(v.array(v.string())),
+    rowCount: v.optional(v.number()),
+    chunkCount: v.optional(v.number()),
+    textPreview: v.optional(v.string()),
   })
     .index("by_status", ["status"])
     .index("by_uploadedBy", ["uploadedBy"])
@@ -50,25 +62,44 @@ export default defineSchema({
     .index("by_openaiFileId", ["openaiFileId"]),
 
   conversations: defineTable({
-    userId: v.id("users"),
+    userId: v.union(v.id("users"), v.string()),
     title: v.string(),
-    status: conversationStatusValidator,
+    status: v.optional(conversationStatusValidator),
     createdAt: v.number(),
     updatedAt: v.number(),
-    lastMessageAt: v.number(),
+    lastMessageAt: v.optional(v.number()),
+    mode: v.optional(v.union(v.literal("chat"), v.literal("rag"))),
   })
     .index("by_userId_and_updatedAt", ["userId", "updatedAt"])
     .index("by_userId_and_status", ["userId", "status"]),
 
   messages: defineTable({
     conversationId: v.id("conversations"),
-    userId: v.id("users"),
+    userId: v.union(v.id("users"), v.string()),
     role: messageRoleValidator,
     content: v.string(),
-    status: messageStatusValidator,
-    citations: v.array(citationValidator),
+    status: v.optional(messageStatusValidator),
+    citations: v.optional(v.array(citationValidator)),
+    sources: v.optional(
+      v.array(
+        v.union(
+          citationValidator,
+          v.object({
+            documentId: v.optional(v.id("documents")),
+            documentName: v.string(),
+            sourceType: v.union(
+              v.literal("csv"),
+              v.literal("pdf"),
+              v.literal("web"),
+            ),
+            url: v.optional(v.string()),
+          }),
+        ),
+      ),
+    ),
+    mode: v.optional(v.union(v.literal("chat"), v.literal("rag"))),
     model: v.optional(v.string()),
-    ragUsed: v.boolean(),
+    ragUsed: v.optional(v.boolean()),
     tokenUsage: v.optional(tokenUsageValidator),
     error: v.optional(v.string()),
     createdAt: v.number(),
@@ -92,4 +123,24 @@ export default defineSchema({
   })
     .index("by_actorId_and_createdAt", ["actorId", "createdAt"])
     .index("by_targetType_and_createdAt", ["targetType", "createdAt"]),
+
+  documentChunks: defineTable({
+    userId: v.string(),
+    documentId: v.id("documents"),
+    documentName: v.string(),
+    sourceType: v.union(v.literal("csv"), v.literal("pdf")),
+    chunkIndex: v.number(),
+    text: v.string(),
+    embedding: v.array(v.float64()),
+    rowStart: v.optional(v.number()),
+    rowEnd: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_document", ["documentId", "chunkIndex"])
+    .index("by_user_document", ["userId", "documentId"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 1536,
+      filterFields: ["userId"],
+    }),
 });
