@@ -1,102 +1,65 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+const features = [
+  "Next.js app router",
+  "Tailwind CSS v4",
+  "shadcn/ui components",
+  "Clerk and Convex ready",
+];
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+    <main className="min-h-svh bg-background px-6 py-10 text-foreground">
+      <section className="mx-auto flex min-h-[calc(100svh-5rem)] w-full max-w-5xl flex-col justify-center gap-8">
+        <div className="max-w-2xl space-y-5">
+          <Badge variant="secondary" className="w-fit">
+            Pellas monorepo
+          </Badge>
+          <div className="space-y-3">
+            <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl">
+              Frontend is wired with Tailwind and shadcn/ui.
+            </h1>
+            <p className="max-w-xl text-base leading-7 text-muted-foreground">
+              This home page uses local shadcn components, Tailwind utility
+              classes, and the app-level providers already configured in the
+              Next.js app.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button size="lg">Start building</Button>
+            <Button variant="outline" size="lg">
+              View components
+            </Button>
+          </div>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
-      </footer>
-    </div>
+
+        <Card className="max-w-xl">
+          <CardHeader>
+            <CardTitle>Installed stack</CardTitle>
+            <CardDescription>
+              Basic frontend dependencies are ready to use.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {features.map((feature) => (
+                <li key={feature} className="flex items-center gap-2 text-sm">
+                  <span className="size-2 rounded-full bg-primary" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+    </main>
   );
 }

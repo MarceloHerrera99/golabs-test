@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import localFont from "next/font/local";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
 });
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
@@ -22,10 +24,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={geistSans.variable}>
+        <body className={`${geistMono.variable} font-sans antialiased`}>
+          <TooltipProvider>{children}</TooltipProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
