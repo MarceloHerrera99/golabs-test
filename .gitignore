@@ -18,6 +18,17 @@ coverage
 # Turbo
 .turbo
 
+# Spec Kit / planning artifacts
+.specify/
+specs/
+spec.md
+plan.md
+tasks.md
+research.md
+data-model.md
+quickstart.md
+contracts/
+
 # Vercel
 .vercel
 
