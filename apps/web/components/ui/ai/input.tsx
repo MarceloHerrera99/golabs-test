@@ -92,6 +92,7 @@ export type AIInputTextareaProps = ComponentProps<typeof Textarea> & {
 
 export const AIInputTextarea = ({
   onChange,
+  onKeyDown,
   className,
   placeholder = "What would you like to know?",
   minHeight = 48,
@@ -104,7 +105,13 @@ export const AIInputTextarea = ({
   });
 
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+    onKeyDown?.(e);
+
+    if (e.defaultPrevented) {
+      return;
+    }
+
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       const form = e.currentTarget.form;
       if (form) {
